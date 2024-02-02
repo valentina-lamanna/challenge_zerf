@@ -2,8 +2,7 @@
 
 include './directorio.php';
 class FileSystem {
-    //arrayDeFilesystem es un array de todos los directorios que tiene el filesystem
-    public $rutaActual, $directorio, $arbolHome ;
+    public $rutaActual, $directorio, $arbolHome  ;
 
     public function __construct() {
         $this->rutaActual = "/home/valentina";
@@ -26,7 +25,6 @@ class FileSystem {
         else{
             $dirDondeSeCreoElArchivo = $this->directorio->crearArchivo($archivo, $this->rutaActual);
              $this->modificarArbolDeDirectorios($dirDondeSeCreoElArchivo);
-             print 'Cree el archivo : ' .  $this->rutaActual . '/' . $archivo;
         }
     }
     public function ls()
@@ -48,7 +46,6 @@ class FileSystem {
         else {
             $dirDondeSeCreoElNuevoDir = $this->directorio->crearDirectorio($directorio, $this->rutaActual);
             $this->modificarArbolDeDirectorios($dirDondeSeCreoElNuevoDir);
-             print '<br/>Cree el directorio : ' .  $this->rutaActual . '/' . $directorio;
         }
     }
 
@@ -58,91 +55,107 @@ class FileSystem {
         print 'Ruta actual :    '. $this->directorio->pdw();
     }
 
-    public function cd($directorio) {
-        if ($directorio === '..') {
-            $this->rutaActual = $this->getDirectorioPadre();
-        } else {
-            if(substr($directorio, 0) ==' /') {$rut=$directorio;}//ruta absoluta
-            else{$rut= $this->rutaActual.'/'.$directorio;}//ruta relativa
+     public function cd($directorio) {
+            if ($directorio === '..') {
+                $this->rutaActual = $this->getDirectorioPadre();
+                foreach($this->directorio->getHijos() as $h){
+                };
+            } else {
+                if(substr($directorio, 0) ==' /') {$rut=$directorio;}//ruta absoluta
+                else{$rut= $this->rutaActual.'/'.$directorio;}//ruta relativa
 
-            if ($this->setarElNuevoDirectoriro($rut)) $this->rutaActual = $rut;
-            else  print "Error: Directorio '$directorio' no encontrado.";
-
-
+                if ($this->setarElNuevoDirectoriro($rut)) $this->rutaActual = $rut;
+                else  echo "Error: Directorio '$directorio' no encontrado.";
+            }
         }
-    }
+
 
         /*
     ---------------------------------------------------------------------------------
-        FUNCIONES AUXILIARES
+        FUNCIONES AUXILIARES DE TOUCH Y MKDIR
     ---------------------------------------------------------------------------------
     */
 
     public function modificarArbolDeDirectorios($nodoModificado){
-               if( $this->arbolHome->getRuta() === $nodoModificado->getRuta()){
-                    $this->setArbolHome($nodoModificado);
-               }else{
-                    foreach($this->arbolHome->getHijos() as $hijo){
-                        $padreModificado = $this->modificarArbolDeDirectoriosRecursivo($this->arbolHome, $hijo, $nodoModificado);
-                        $this->setArbolHome($padreModificado);
-                    }
-               }
-         }
+        if( $this->arbolHome->getRuta() === $nodoModificado->getRuta()){ //el modificado es el raiz
+           $this->setArbolHome($nodoModificado);
+        }else{
+            foreach($this->arbolHome->getHijos() as $hijo){
+                $padreModificado = $this->modificarArbolDeDirectoriosRecursivo($this->arbolHome, $hijo, $nodoModificado);
+                $this->setArbolHome($padreModificado);
+            }
+        }
+    }
 
     public function modificarArbolDeDirectoriosRecursivo($padre, $nodoACheckear, $nodoModificado) {
-                   // Verificar si el nodo a modificar fue encontrado en la rama actual
-                   if ($nodoACheckear->getRuta() === $nodoModificado->getRuta()) {
-                        $padre->cambiarHijo($nodoACheckear);
-                       return $padre;
-                   } else {
-                       foreach($nodoACheckear->getHijos() as $hijo){
-                           return $this->modificarArbolDeDirectoriosRecursivo($nodoACheckear, $hijo, $nodoModificado);
+      if(!$nodoACheckear->esUnArchivo()){ if ($nodoACheckear->getRuta() === $nodoModificado->getRuta()) {
+           return $padre->cambiarHijo($nodoACheckear);
+       } else {
+           foreach($nodoACheckear->getHijos() as $hijo){
+               return $this->modificarArbolDeDirectoriosRecursivo($nodoACheckear, $hijo, $nodoModificado);
+           }
+           return null;
+       }}
+   }
 
-                   }
-               }}
+     /*
+       ---------------------------------------------------------------------------------
+           FUNCIONES AUXILIARES DE CD
+       ---------------------------------------------------------------------------------
+       */
 
-    public function getDirectorioPadre() {
-       $partes = explode('/', $this->rutaActual);
-        array_pop($partes);
-        $nuevaRuta =  implode('/', $partes);
-        if($this->setarElNuevoDirectoriro($nuevaRuta)){
-       return $nuevaRuta;}else{ return 'aaaaaa';}
+      public function getDirectorioPadre() {
+            $partes = explode('/', $this->rutaActual);
+            array_pop($partes);
+            $nuevaRuta = implode('/', $partes);
+            $this->setarElNuevoDirectoriro($nuevaRuta);
+            return $nuevaRuta;
 
-    }
+        }
 
     public function setarElNuevoDirectoriro($nuevaRuta)
     {
 
         if ($this->arbolHome->getRuta() === $nuevaRuta) {
             $nuevo = new Directorio($this->arbolHome->getRuta(), $this->arbolHome->getNombre(), $this->arbolHome->getHijos());
+
         }else{
-            $nuevo = $this->chequearHijos($this->arbolHome->getHijos(), $nuevaRuta);
+            foreach($this->arbolHome->getHijos() as $hijo){
+               $nuevo = $this->encontrarNuevoActual($this->arbolHome, $hijo, $nuevaRuta);
+            }
         }
 
-        // Verifica si se encontró el objeto
         if ($nuevo !== null) {
-          $this->directorio= $nuevo;
+          $this->directorio = $nuevo;
           return true;
         } else {
            return false;
         }
     }
 
-    public function chequearHijos($nodosACheckear, $nuevaRuta){
-       foreach($nodosACheckear as $nodoACheckear)
-       { if ($nodoACheckear->getRuta() === $nuevaRuta) {
-                    return new Directorio($nodoACheckear->getRuta(), $nodoACheckear->getNombre(), $nodoACheckear->getHijos());
-          }
-          else{
-               return $this->chequearHijos($nodoACheckear->getHijos(), $nuevaRuta);
-          }}
-    }
+     public function encontrarNuevoActual($padre, $nodoACheckear, $nuevaRuta) {
 
+           if ($nodoACheckear->getRuta() === $nuevaRuta) {
+               return $nodoACheckear;
+           } else {
+               foreach($nodoACheckear->getHijos() as $hijo){
+                   return $this->modificarArbolDeDirectoriosRecursivo($nodoACheckear, $hijo, $nodoModificado);
+               }
+               return null;
+           }
+       }
+
+  /*
+    ---------------------------------------------------------------------------------
+        FUNCIONES AUXILIARES
+    ---------------------------------------------------------------------------------
+    */
     public function getArbolHome(){
-    return $this->arbolHome;
+        return $this->arbolHome;
     }
     public function setArbolHome($home){
         $this->arbolHome =$home;
-        print_r($this->arbolHome);
-        }
+    }
+
 }
+

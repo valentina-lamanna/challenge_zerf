@@ -13,7 +13,7 @@ class Nodo {
         return $this->nombre;
     }
 
-   public function getArchivo(){
+   public function esUnArchivo(){
    return $this->archivo;
    }
 

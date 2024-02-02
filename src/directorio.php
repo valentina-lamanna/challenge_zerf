@@ -30,9 +30,8 @@ class Directorio extends Nodo {
      public function ls_r()
         {
             $ls =array();
-//             print_r($this->hijos);
             foreach ($this->hijos as $nodo){
-                if(!$nodo->getArchivo()){
+                if(!$nodo->esUnArchivo()){
                     array_push($ls, $nodo->getNombre());
                     $hijos = $nodo->getHijos();
                     foreach($hijos as $h){
@@ -40,10 +39,9 @@ class Directorio extends Nodo {
                     }
                     if($nodo->tieneHijosDirectorios()){
                         foreach($hijos as $hij){
-                            $hij->ls_r();
+                           if(!$hij->esUnArchivo()){ $hij->ls_r();}
                         }
                     }
-
                 }else{array_push($ls, $nodo->getNombre());}
 
             }
@@ -52,7 +50,7 @@ class Directorio extends Nodo {
 
     public function tieneHijosDirectorios(){
     return count(array_filter($this->hijos, function($h){
-        return !$h->getArchivo();
+        return !$h->esUnArchivo();
     })) >0;
 
     }
@@ -70,22 +68,25 @@ class Directorio extends Nodo {
 
     public function existeArchivo($archivo){
         foreach($this->hijos as $arc){
-            if( $arc->getArchivo  && $arc->getNombre === $archivo) return true;
+            if( $arc->esUnArchivo  && $arc->getNombre === $archivo) return true;
         }
         return false;
     }
 
     public function existeDirectorio($directorio){
         foreach($this->hijos as $dir){
-            if(!$arc->getArchivo  && $dir->getnombre === $directorio) return true;
+            if(!$arc->esUnArchivo  && $dir->getnombre === $directorio) return true;
         }
         return false;
     }
 
     public function cambiarHijo($hijoACambiar){
         $hijosSInElCambio = array_filter($this->hijos, function($dir) use ($hijoACambiar){
-         return $dir->getRuta()  !== $nuevoNodo->getRuta();});
+         return $dir->getRuta()
+          !== $hijoACambiar->getRuta();});
+        $this->hijos=$hijosSInElCambio;
         array_push($this->hijos, $hijoACambiar);
+        return $this;
     }
 
      /**
