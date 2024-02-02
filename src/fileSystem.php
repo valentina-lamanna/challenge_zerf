@@ -58,8 +58,6 @@ class FileSystem {
      public function cd($directorio) {
             if ($directorio === '..') {
                 $this->rutaActual = $this->getDirectorioPadre();
-                foreach($this->directorio->getHijos() as $h){
-                };
             } else {
                 if(substr($directorio, 0) ==' /') {$rut=$directorio;}//ruta absoluta
                 else{$rut= $this->rutaActual.'/'.$directorio;}//ruta relativa
