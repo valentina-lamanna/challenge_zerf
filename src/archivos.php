@@ -1,16 +1,16 @@
 <?php
-class Archivo {
-    public $ruta, $nombreArchivo;
+include_once "nodo.php";
 
-    public function __construct($ruta, $nombreArchivo) {
+class Archivo extends Nodo {
+    public $ruta, $nombre , $archivo;
+
+    public function __construct($ruta, $nombre, $archivo= true) {
         $this->ruta = $ruta;
-        $this->nombreArchivo = $nombreArchivo;
+        $this->nombre = $nombre;
+        $this->archivo = $archivo;
     }
 
-    public function getNombreArchivo()
-    {
-        return $this->nombreArchivo;
-    }
+
 
 }
 
